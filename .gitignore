@@ -131,3 +131,7 @@ dmypy.json
 # local folders
 postgres-data/
 .tp1/
+
+amazon-meta.txt
+
+.idea/
