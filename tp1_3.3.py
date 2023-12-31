@@ -64,8 +64,32 @@ def best_similar() -> str:
     return show_results("b", ["ASIN", "TITLE", "GROUP", "SALESRANK"])
 
 
+def show_daily_evolution() -> str:
+    """ Dado um produto, mostrar a evolução diária das médias de avaliação ao longo do intervalo de tempo coberto no
+    arquivo de entrada. """
+
+    cursor.execute(
+        '''
+            SELECT date, cumulative_avg_rating AS avg_to_date
+            FROM
+              (SELECT id,
+                      product_asin, date, rating,
+                                          AVG(rating) OVER (
+                                                            ORDER BY date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS cumulative_avg_rating
+               FROM Reviews
+               WHERE product_asin = 'B000065U6P') AS avg_rating_to_review
+            WHERE avg_rating_to_review.id IN
+                (SELECT MAX(id) AS max_id
+                 FROM reviews
+                 WHERE product_asin = 'B000065U6P'
+                 GROUP BY date) -- AS latest_day_review
+        '''
+    )
+    return show_results("c", ["DATE", "AVG_RATING"])
+
+
 def execute_queries():
-    queries_list = [top_ten_comments, best_similar]
+    queries_list = [top_ten_comments, best_similar, show_daily_evolution]
 
     start_time = time.monotonic()
     with open("./output.txt", "w") as out:
