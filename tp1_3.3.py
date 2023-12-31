@@ -13,7 +13,7 @@ def show_results(option: str, headers: List[str]) -> str:
 
 def top_ten_comments() -> str:
     """ Dado um produto, listar os 5 comentários mais úteis e com maior avaliação e os 5 comentários mais úteis e com
-    menor avaliação """
+    menor avaliação. """
 
     cursor.execute(
         '''
@@ -40,8 +40,32 @@ def top_ten_comments() -> str:
     return show_results("a", ["TITLE", "ASIN", "DATE", "CUSTOMER", "RATING", "VOTES", "HELPFUL"])
 
 
+def best_similar() -> str:
+    """ Dado um produto, listar os produtos similares com maiores vendas do que ele. """
+
+    cursor.execute(
+        '''
+            SELECT asin,
+                   title,
+                   product_group,
+                   salesrank
+            FROM product
+            JOIN
+              (SELECT similar_asin
+               FROM similar_
+               WHERE product_asin = 'B00000AU3R') AS p_similar ON asin = similar_asin
+            WHERE salesrank >
+                (SELECT salesrank
+                 FROM product
+                 WHERE asin = 'B00000AU3R')
+            ORDER BY salesrank DESC;
+        '''
+    )
+    return show_results("b", ["ASIN", "TITLE", "GROUP", "SALESRANK"])
+
+
 def execute_queries():
-    queries_list = [top_ten_comments]
+    queries_list = [top_ten_comments, best_similar]
 
     start_time = time.monotonic()
     with open("./output.txt", "w") as out:
