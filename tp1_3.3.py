@@ -156,9 +156,33 @@ def top_category_by_product() -> str:
     return show_results("f", ["CATEGORY_NAME", "AVG_HELPFUL"])
 
 
+def top_clients() -> str:
+    """ Listar os 10 clientes que mais fizeram comentários por grupo de produto. """
+
+    cursor.execute(
+        '''
+            SELECT *
+            FROM
+              (SELECT *,
+                      ROW_NUMBER() OVER (PARTITION BY product_group
+                                         ORDER BY reviews_count DESC) AS rank
+               FROM
+                 (SELECT product_group,
+                         id_client,
+                         COUNT(*) AS reviews_count
+                  FROM reviews
+                  JOIN product ON asin = product_asin
+                  GROUP BY id_client,
+                           product_group) AS review_per_client) AS review_per_product
+            WHERE rank <= 10
+        '''
+    )
+    return show_results("g", ["GROUP", "CUSTOMER", "REVIEWS", "RANK"])
+
+
 def execute_queries():
     queries_list = [top_ten_comments, best_similar, show_daily_evolution, sales_leaders_by_groups, best_evaluated,
-                    top_category_by_product]
+                    top_category_by_product, top_clients]
 
     start_time = time.monotonic()
     with open("./output.txt", "w") as out:
