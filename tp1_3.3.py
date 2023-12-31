@@ -88,8 +88,26 @@ def show_daily_evolution() -> str:
     return show_results("c", ["DATE", "AVG_RATING"])
 
 
+def sales_leaders_by_groups() -> str:
+    """ Listar os 10 produtos líderes de venda em cada grupo de produtos. """
+
+    cursor.execute(
+        '''
+            SELECT *
+            FROM
+              (SELECT *,
+                      RANK() OVER (PARTITION BY product_group
+                                   ORDER BY salesrank DESC)
+               FROM product) AS R
+            WHERE rank <= 10
+              AND product_group IS NOT NULL;
+        '''
+    )
+    return show_results("d", ["ASIN", "TITLE", "GROUP", "SALESRANK", "RANK"])
+
+
 def execute_queries():
-    queries_list = [top_ten_comments, best_similar, show_daily_evolution]
+    queries_list = [top_ten_comments, best_similar, show_daily_evolution, sales_leaders_by_groups]
 
     start_time = time.monotonic()
     with open("./output.txt", "w") as out:
