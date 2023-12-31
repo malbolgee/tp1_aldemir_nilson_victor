@@ -132,8 +132,33 @@ def best_evaluated() -> str:
     return show_results("e", ["ASIN", "TITLE", "GROUP", "HELPFUL"])
 
 
+def top_category_by_product() -> str:
+    """ Listar as 5 categorias de produto com a maior média de avaliações úteis positivas por produto. """
+
+    cursor.execute(
+        '''
+            SELECT name AS category_name,
+                   avg_helpful
+            FROM
+              (SELECT name,
+                      ROUND(AVG(helpful), 2) AS avg_helpful
+               FROM category
+               INNER JOIN products_per_category ON id = category_id
+               INNER JOIN reviews ON reviews.product_asin = products_per_category.product_asin
+               WHERE (votes > 0
+                      AND ((helpful * 100) / votes) > 50
+                      AND rating > 2)
+               GROUP BY name
+               ORDER BY avg_helpful DESC
+               LIMIT 5) AS X
+        '''
+    )
+    return show_results("f", ["CATEGORY_NAME", "AVG_HELPFUL"])
+
+
 def execute_queries():
-    queries_list = [top_ten_comments, best_similar, show_daily_evolution, sales_leaders_by_groups, best_evaluated]
+    queries_list = [top_ten_comments, best_similar, show_daily_evolution, sales_leaders_by_groups, best_evaluated,
+                    top_category_by_product]
 
     start_time = time.monotonic()
     with open("./output.txt", "w") as out:
