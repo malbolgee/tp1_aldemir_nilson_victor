@@ -106,8 +106,34 @@ def sales_leaders_by_groups() -> str:
     return show_results("d", ["ASIN", "TITLE", "GROUP", "SALESRANK", "RANK"])
 
 
+def best_evaluated() -> str:
+    """ Listar os 10 produtos com a maior média de avaliações úteis positivas por produto. """
+
+    cursor.execute(
+        '''
+            SELECT asin,
+                   title,
+                   product_group,
+                   helpful
+            FROM product
+            JOIN
+              (SELECT product_asin,
+                      AVG(rating) rating,
+                      ROUND(AVG(helpful), 2) helpful
+               FROM reviews
+               WHERE (votes > 0
+                      AND ((helpful * 100) / votes) > 50
+                      AND rating > 2)
+               GROUP BY product_asin
+               ORDER BY helpful DESC
+               LIMIT 10) AS R ON product.asin = R.product_asin;
+        '''
+    )
+    return show_results("e", ["ASIN", "TITLE", "GROUP", "HELPFUL"])
+
+
 def execute_queries():
-    queries_list = [top_ten_comments, best_similar, show_daily_evolution, sales_leaders_by_groups]
+    queries_list = [top_ten_comments, best_similar, show_daily_evolution, sales_leaders_by_groups, best_evaluated]
 
     start_time = time.monotonic()
     with open("./output.txt", "w") as out:
