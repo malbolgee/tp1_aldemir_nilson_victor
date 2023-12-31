@@ -134,5 +134,6 @@ postgres-data/
 
 amazon-meta.txt
 test.txt
+output.txt
 
 .idea/
