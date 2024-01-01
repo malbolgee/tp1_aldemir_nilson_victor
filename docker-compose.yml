@@ -1,0 +1,35 @@
+version: "3"
+services:
+  postgres:
+    container_name: "tp1_aldemir_nilson_victor_postgres"
+    env_file: ./.env
+    image: arielafonso/postgres:1.0
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+      - POSTGRES_DB=$POSTGRES_DATABASE
+    ports:
+      - $POSTGRES_LOCAL_PORT:$POSTGRES_DOCKER_PORT
+    networks:
+      - app-net
+    volumes:
+      - postgres:/var/lib/postgresql/data
+
+  python:
+    container_name: "tp1_aldemir_nilson_victor_python"
+    build:
+      context: .
+    depends_on:
+      - postgres
+    volumes:
+      - ./:/app
+    networks:
+      - app-net
+    stdin_open: true
+    tty: true
+
+volumes:
+  postgres:
+
+networks:
+  app-net:

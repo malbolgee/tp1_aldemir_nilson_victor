@@ -1,10 +1,19 @@
+import os
 import sys
 import time
 from datetime import timedelta
 from typing import List
 
 import psycopg2
+from dotenv import load_dotenv
 from tabulate import tabulate
+
+load_dotenv('.env')
+USER = os.getenv('POSTGRES_USER')
+PASSWORD = os.getenv('POSTGRES_PASSWORD')
+HOST = os.getenv('POSTGRES_HOST')
+PORT = os.getenv('POSTGRES_DOCKER_PORT')
+DATABASE = os.getenv('POSTGRES_DATABASE')
 
 
 def show_results(option: str, headers: List[str]) -> str:
@@ -202,11 +211,10 @@ def close():
 if __name__ == "__main__":
     try:
         connection = psycopg2.connect(
-            host="localhost",
-            user="malbolge",
-            password="123456",
-            database="postgres",
-            port="5432"
+            host=HOST,
+            database=DATABASE,
+            user=USER,
+            password=PASSWORD
         )
         cursor = connection.cursor()
 

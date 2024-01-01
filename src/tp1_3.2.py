@@ -1,12 +1,30 @@
+import os
 import re
 import time
 from datetime import timedelta
 from threading import Thread
 
 import psycopg2
+from dotenv import load_dotenv
 from psycopg2.extras import execute_values
 
-tables = '''
+load_dotenv(".env")
+USER = os.getenv("POSTGRES_USER")
+PASSWORD = os.getenv("POSTGRES_PASSWORD")
+HOST = os.getenv("POSTGRES_HOST")
+PORT = os.getenv("POSTGRES_DOCKER_PORT")
+DATABASE = os.getenv("POSTGRES_DATABASE")
+INPUT = os.getenv("INPUT_FILE")
+
+drop_tables = '''
+        DROP TABLE IF EXISTS Product CASCADE;
+        DROP TABLE IF EXISTS Similar_ CASCADE;
+        DROP TABLE IF EXISTS Reviews CASCADE;
+        DROP TABLE IF EXISTS Category CASCADE;
+        DROP TABLE IF EXISTS Products_per_category CASCADE;
+'''
+
+create_tables = '''
     CREATE TABLE IF NOT EXISTS Product(
         asin VARCHAR(10) PRIMARY KEY NOT NULL,
         title TEXT,
@@ -158,21 +176,22 @@ def execute():
     connection = None
     try:
         connection = psycopg2.connect(
-            host="localhost",
-            user="malbolge",
-            password="123456",
-            database="postgres",
-            port="5432"
+            host=HOST,
+            database=DATABASE,
+            user=USER,
+            password=PASSWORD,
+            port=PORT
         )
 
         print("Creating tables...")
         cursor = connection.cursor()
-        cursor.execute(tables)
+        cursor.execute(drop_tables)
+        cursor.execute(create_tables)
         connection.commit()
         print("Done creating tables")
 
         print("Reading file...")
-        read_data_from_file("./amazon-meta.txt")
+        read_data_from_file(os.getenv("INPUT_FILE"))
         print("Done reading file")
 
         start_time = time.monotonic()
